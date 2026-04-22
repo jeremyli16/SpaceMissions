@@ -28,9 +28,9 @@ Then open [http://127.0.0.1:8050](http://127.0.0.1:8050) in your browser.
 ## Features
 
 ### Dashboard
-- **Summary stats** — total missions, overall success rate, and date range, all updated dynamically as filters change
-- **Interactive filters** — date range picker, multi-select company dropdown, and mission status filter with a reset button to restore defaults
-- **Data table** — sortable and filterable table with pagination (20 rows/page)
+- **Summary stats**: total missions, overall success rate, and date range, all updated dynamically as filters change
+- **Interactive filters**: date range picker, multi-select company dropdown, and mission status filter with a reset button to restore defaults
+- **Data table**: sortable and filterable table with pagination (20 rows/page)
 
 ### Visualizations
 | Chart | Type | Rationale |
@@ -48,16 +48,16 @@ The following functions are importable from `functions.py` independently of the 
 from functions import getMissionCountByCompany, getSuccessRate  # etc.
 ```
 
-| Function | Returns |
-|---|---|
-| `getMissionCountByCompany(companyName: str)` | `int` |
-| `getSuccessRate(companyName: str)` | `float` — % rounded to 2 decimal places |
-| `getMissionsByDateRange(startDate: str, endDate: str)` | `list[str]` — mission names sorted chronologically |
-| `getTopCompaniesByMissionCount(n: int)` | `list[tuple]` — `[(name, count), ...]` |
-| `getMissionStatusCount()` | `dict` — counts for all 4 statuses |
-| `getMissionsByYear(year: int)` | `int` |
-| `getMostUsedRocket()` | `str` |
-| `getAverageMissionsPerYear(startYear: int, endYear: int)` | `float` — rounded to 2 decimal places |
+| Function | Returns | Notes |
+|---|---|---|
+| `getMissionCountByCompany(companyName: str)` | `int` | Returns `0` if company not found |
+| `getSuccessRate(companyName: str)` | `float` | Rounded to 2 decimal places; returns `0.0` if company has no missions |
+| `getMissionsByDateRange(startDate: str, endDate: str)` | `list[str]` | Mission names sorted chronologically; dates in `YYYY-MM-DD` format |
+| `getTopCompaniesByMissionCount(n: int)` | `list[tuple]` | `[(name, count), ...]` sorted by count desc, then alphabetically |
+| `getMissionStatusCount()` | `dict` | All 4 keys always present: `Success`, `Failure`, `Partial Failure`, `Prelaunch Failure` |
+| `getMissionsByYear(year: int)` | `int` | Returns `0` if no missions in that year |
+| `getMostUsedRocket()` | `str` | Alphabetical tiebreak; returns `""` if no data |
+| `getAverageMissionsPerYear(startYear: int, endYear: int)` | `float` | Rounded to 2 decimal places; denominator is full year range, not just years with launches |
 
 ## Project Structure
 
