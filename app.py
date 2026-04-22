@@ -66,9 +66,9 @@ app.layout = html.Div(
         html.Div(
             style={"display": "flex", "gap": "16px", "marginBottom": "24px", "flexWrap": "wrap"},
             children=[
-                html.Div([html.P("Total Missions", style=_label_style), html.P(f"{total_missions:,}", style=_value_style)], style=_card_style),
-                html.Div([html.P("Overall Success Rate", style=_label_style), html.P(f"{overall_success_rate}%", style=_value_style)], style=_card_style),
-                html.Div([html.P("Date Range", style=_label_style), html.P(f"{date_min} → {date_max}", style={**_value_style, "fontSize": "16px"})], style=_card_style),
+                html.Div([html.P("Total Missions", style=_label_style), html.P(id="stat-total", style=_value_style)], style=_card_style),
+                html.Div([html.P("Overall Success Rate", style=_label_style), html.P(id="stat-success-rate", style=_value_style)], style=_card_style),
+                html.Div([html.P("Date Range", style=_label_style), html.P(id="stat-date-range", style={**_value_style, "fontSize": "16px"})], style=_card_style),
             ],
         ),
 
@@ -95,7 +95,8 @@ app.layout = html.Div(
                         options=_company_options,
                         placeholder="All companies",
                         clearable=True,
-                        style={"width": "240px", "background": "#1e2a3a", "color": "#0f1923"},
+                        multi=True,
+                        style={"width": "300px", "background": "#1e2a3a", "color": "#0f1923"},
                     ),
                 ]),
                 html.Div([
@@ -106,6 +107,24 @@ app.layout = html.Div(
                         placeholder="All statuses",
                         multi=True,
                         style={"width": "300px", "background": "#1e2a3a", "color": "#0f1923"},
+                    ),
+                ]),
+                html.Div([
+                    html.Label(" ", style=_label_style),
+                    html.Button(
+                        "Reset Filters",
+                        id="reset-btn",
+                        n_clicks=0,
+                        style={
+                            "background": "#2d3f55",
+                            "color": "#e8f0fe",
+                            "border": "1px solid #4a9eff",
+                            "borderRadius": "6px",
+                            "padding": "8px 16px",
+                            "cursor": "pointer",
+                            "fontSize": "13px",
+                            "fontWeight": "600",
+                        },
                     ),
                 ]),
             ],
@@ -157,8 +176,26 @@ _CHART_TEMPLATE = "plotly_dark"
 _CHART_BG = "#131f2e"
 _PAPER_BG = "#1e2a3a"
 
+_DEFAULT_START = date_min_picker
+_DEFAULT_END = date_max_picker
+
 
 @callback(
+    Output("date-filter", "start_date"),
+    Output("date-filter", "end_date"),
+    Output("company-filter", "value"),
+    Output("status-filter", "value"),
+    Input("reset-btn", "n_clicks"),
+    prevent_initial_call=True,
+)
+def reset_filters(_):
+    return _DEFAULT_START, _DEFAULT_END, None, None
+
+
+@callback(
+    Output("stat-total", "children"),
+    Output("stat-success-rate", "children"),
+    Output("stat-date-range", "children"),
     Output("year-chart", "figure"),
     Output("company-chart", "figure"),
     Output("status-chart", "figure"),
@@ -177,7 +214,7 @@ def update_all(start_date, end_date, company, statuses):
     if end_date:
         filtered = filtered[filtered["Date"] <= pd.to_datetime(end_date)]
     if company:
-        filtered = filtered[filtered["Company"] == company]
+        filtered = filtered[filtered["Company"].isin(company)]
     if statuses:
         filtered = filtered[filtered["MissionStatus"].isin(statuses)]
 
@@ -262,4 +299,14 @@ def update_all(start_date, end_date, company, statuses):
     table_df["Price"] = table_df["Price"].astype(str).replace("<NA>", "")
     table_data = table_df.to_dict("records")
 
-    return fig_year, fig_company, fig_status, fig_success, table_data
+    # Summary stats
+    total = len(filtered)
+    success_rate = round((filtered["MissionStatus"] == "Success").sum() / total * 100, 2) if total else 0.0
+    if not filtered.empty and filtered["Date"].notna().any():
+        d_min = filtered["Date"].min().strftime("%Y-%m-%d")
+        d_max = filtered["Date"].max().strftime("%Y-%m-%d")
+        date_range_str = f"{d_min} → {d_max}"
+    else:
+        date_range_str = "N/A"
+
+    return f"{total:,}", f"{success_rate}%", date_range_str, fig_year, fig_company, fig_status, fig_success, table_data
