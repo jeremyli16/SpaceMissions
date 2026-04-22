@@ -34,6 +34,34 @@ _status_options = [
     {"label": s, "value": s}
     for s in ["Success", "Failure", "Partial Failure", "Prelaunch Failure"]
 ]
+_rocket_status_options = (
+    [{"label": s, "value": s} for s in sorted(_df["RocketStatus"].dropna().unique())]
+    if not _df.empty else []
+)
+_country_options = (
+    [{"label": c, "value": c} for c in sorted(
+        _df["Location"].str.split(",").str[-1].str.strip().dropna().unique()
+    )]
+    if not _df.empty else []
+)
+_decades = list(range(1950, 2030, 10))
+_decade_options = [{"label": "All", "value": "all"}] + [
+    {"label": f"{d}s", "value": str(d)} for d in _decades
+]
+if not _df.empty and _df["Price"].notna().any():
+    _price_min = float(_df["Price"].min())
+    _price_max = float(_df["Price"].max())
+else:
+    _price_min, _price_max = 0.0, 1000.0
+_price_marks = {
+    int(v): f"{int(v):,}" for v in [
+        _price_min,
+        _price_min + (_price_max - _price_min) * 0.25,
+        _price_min + (_price_max - _price_min) * 0.5,
+        _price_min + (_price_max - _price_min) * 0.75,
+        _price_max,
+    ]
+}
 
 _card_style = {
     "background": "#1e2a3a",
@@ -72,9 +100,9 @@ app.layout = html.Div(
             ],
         ),
 
-        # Filters
+        # Filters — row 1: date + decade + reset
         html.Div(
-            style={"display": "flex", "gap": "16px", "marginBottom": "24px", "flexWrap": "wrap", "alignItems": "flex-end"},
+            style={"display": "flex", "gap": "16px", "marginBottom": "12px", "flexWrap": "wrap", "alignItems": "flex-end"},
             children=[
                 html.Div([
                     html.Label("Date Range", style=_label_style),
@@ -89,24 +117,22 @@ app.layout = html.Div(
                     ),
                 ]),
                 html.Div([
-                    html.Label("Company", style=_label_style),
-                    dcc.Dropdown(
-                        id="company-filter",
-                        options=_company_options,
-                        placeholder="All companies",
-                        clearable=True,
-                        multi=True,
-                        style={"width": "300px", "background": "#1e2a3a", "color": "#0f1923"},
-                    ),
-                ]),
-                html.Div([
-                    html.Label("Mission Status", style=_label_style),
-                    dcc.Dropdown(
-                        id="status-filter",
-                        options=_status_options,
-                        placeholder="All statuses",
-                        multi=True,
-                        style={"width": "300px", "background": "#1e2a3a", "color": "#0f1923"},
+                    html.Label("Decade", style=_label_style),
+                    dcc.RadioItems(
+                        id="decade-filter",
+                        options=_decade_options,
+                        value="all",
+                        inline=True,
+                        inputStyle={"display": "none"},
+                        labelStyle={
+                            "padding": "5px 10px",
+                            "marginRight": "4px",
+                            "background": "#2d3f55",
+                            "borderRadius": "4px",
+                            "cursor": "pointer",
+                            "fontSize": "13px",
+                            "color": "#e8f0fe",
+                        },
                     ),
                 ]),
                 html.Div([
@@ -127,6 +153,73 @@ app.layout = html.Div(
                         },
                     ),
                 ]),
+            ],
+        ),
+
+        # Filters — row 2: company + status + rocket status + country
+        html.Div(
+            style={"display": "flex", "gap": "16px", "marginBottom": "12px", "flexWrap": "wrap", "alignItems": "flex-end"},
+            children=[
+                html.Div([
+                    html.Label("Company", style=_label_style),
+                    dcc.Dropdown(
+                        id="company-filter",
+                        options=_company_options,
+                        placeholder="All companies",
+                        clearable=True,
+                        multi=True,
+                        style={"width": "300px", "background": "#1e2a3a", "color": "#0f1923"},
+                    ),
+                ]),
+                html.Div([
+                    html.Label("Mission Status", style=_label_style),
+                    dcc.Dropdown(
+                        id="status-filter",
+                        options=_status_options,
+                        placeholder="All statuses",
+                        multi=True,
+                        style={"width": "280px", "background": "#1e2a3a", "color": "#0f1923"},
+                    ),
+                ]),
+                html.Div([
+                    html.Label("Rocket Status", style=_label_style),
+                    dcc.Dropdown(
+                        id="rocket-status-filter",
+                        options=_rocket_status_options,
+                        placeholder="All rockets",
+                        clearable=True,
+                        multi=True,
+                        style={"width": "200px", "background": "#1e2a3a", "color": "#0f1923"},
+                    ),
+                ]),
+                html.Div([
+                    html.Label("Country", style=_label_style),
+                    dcc.Dropdown(
+                        id="country-filter",
+                        options=_country_options,
+                        placeholder="All countries",
+                        clearable=True,
+                        multi=True,
+                        style={"width": "220px", "background": "#1e2a3a", "color": "#0f1923"},
+                    ),
+                ]),
+            ],
+        ),
+
+        # Filters — row 3: price range
+        html.Div(
+            style={"marginBottom": "24px"},
+            children=[
+                html.Label("Price Range (M$)", style=_label_style),
+                dcc.RangeSlider(
+                    id="price-filter",
+                    min=_price_min,
+                    max=_price_max,
+                    value=[_price_min, _price_max],
+                    marks=_price_marks,
+                    tooltip={"placement": "bottom", "always_visible": False},
+                    updatemode="mouseup",
+                ),
             ],
         ),
 
@@ -183,6 +276,7 @@ def _fix_hover(fig):
     ))
     return fig
 
+
 _DEFAULT_START = date_min_picker
 _DEFAULT_END = date_max_picker
 
@@ -192,11 +286,15 @@ _DEFAULT_END = date_max_picker
     Output("date-filter", "end_date"),
     Output("company-filter", "value"),
     Output("status-filter", "value"),
+    Output("rocket-status-filter", "value"),
+    Output("country-filter", "value"),
+    Output("decade-filter", "value"),
+    Output("price-filter", "value"),
     Input("reset-btn", "n_clicks"),
     prevent_initial_call=True,
 )
 def reset_filters(_):
-    return _DEFAULT_START, _DEFAULT_END, None, None
+    return _DEFAULT_START, _DEFAULT_END, None, None, None, None, "all", [_price_min, _price_max]
 
 
 @callback(
@@ -212,10 +310,20 @@ def reset_filters(_):
     Input("date-filter", "end_date"),
     Input("company-filter", "value"),
     Input("status-filter", "value"),
+    Input("rocket-status-filter", "value"),
+    Input("country-filter", "value"),
+    Input("decade-filter", "value"),
+    Input("price-filter", "value"),
 )
-def update_all(start_date, end_date, company, statuses):
+def update_all(start_date, end_date, company, statuses, rocket_statuses, countries, decade, price_range):
     filtered = _df.copy()
 
+    if decade and decade != "all":
+        decade_start = int(decade)
+        filtered = filtered[
+            (filtered["Date"].dt.year >= decade_start) &
+            (filtered["Date"].dt.year < decade_start + 10)
+        ]
     if start_date:
         filtered = filtered[filtered["Date"] >= pd.to_datetime(start_date)]
     if end_date:
@@ -224,6 +332,15 @@ def update_all(start_date, end_date, company, statuses):
         filtered = filtered[filtered["Company"].isin(company)]
     if statuses:
         filtered = filtered[filtered["MissionStatus"].isin(statuses)]
+    if rocket_statuses:
+        filtered = filtered[filtered["RocketStatus"].isin(rocket_statuses)]
+    if countries:
+        country_col = filtered["Location"].str.split(",").str[-1].str.strip()
+        filtered = filtered[country_col.isin(countries)]
+    if price_range:
+        lo, hi = price_range
+        price_mask = filtered["Price"].isna() | ((filtered["Price"] >= lo) & (filtered["Price"] <= hi))
+        filtered = filtered[price_mask]
 
     # Chart 1: Missions per year (line)
     if not filtered.empty:
