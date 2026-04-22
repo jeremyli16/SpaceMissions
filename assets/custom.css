@@ -1,0 +1,75 @@
+/* Date picker input boxes applies light text globally,
+   but these boxes have a white background */
+.DateInput_input,
+.DateInput_input__focused,
+.DateInput_input__small,
+.DateInput input {
+    color: #1a1a2e !important;
+    background-color: #ffffff !important;
+}
+
+/* Entire date picker wrapper */
+.DateRangePickerInput,
+.DateRangePickerInput__withBorder {
+    background-color: #ffffff !important;
+}
+
+/* Calendar popup for all text and selects */
+.DayPicker,
+.DayPicker *,
+.DateRangePicker_picker,
+.DateRangePicker_picker * {
+    color: #1a1a2e !important;
+}
+
+/* Month/year navigation inputs and selects inside the calendar */
+.CalendarMonth_caption select,
+.DayPickerNavigation select,
+.DayPicker select,
+.DateRangePicker select,
+.DateRangePicker input[type="text"],
+.DateRangePicker input[type="number"],
+.DayPicker input[type="text"],
+.DayPicker input[type="number"],
+.DateRangePicker_picker input,
+.DateRangePicker_picker select {
+    color: #1a1a2e !important;
+    background-color: #ffffff !important;
+}
+
+/* All input/select rendered inside the picker portal */
+[class*="DateRangePicker"] input,
+[class*="DateRangePicker"] select,
+[class*="DayPicker"] input,
+[class*="DayPicker"] select,
+[class*="CalendarMonth"] input,
+[class*="CalendarMonth"] select {
+    color: #1a1a2e !important;
+    background-color: #ffffff !important;
+}
+
+/* Month navigation rendered as <button class="dash-dropdown"> */
+button.dash-dropdown,
+button.dash-dropdown span,
+button.dash-dropdown svg {
+    color: #1a1a2e !important;
+    fill: #1a1a2e !important;
+}
+
+/* Year navigation rendered as <input class="dash-input-element"> */
+input.dash-input-element {
+    color: #1a1a2e !important;
+    background-color: #ffffff !important;
+}
+
+/* Keep selected/highlighted days readable */
+.CalendarDay__selected,
+.CalendarDay__selected:hover {
+    background: #0073bb !important;
+    color: #ffffff !important;
+}
+
+.CalendarDay__selected_span {
+    background: #66b2e8 !important;
+    color: #1a1a2e !important;
+}
