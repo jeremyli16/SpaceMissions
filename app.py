@@ -60,7 +60,7 @@ app.layout = html.Div(
         _warning_banner,
 
         # Header
-        html.H1("Space Missions Dashboard", style={"color": "#e8f0fe", "fontSize": "24px", "fontWeight": "700", "margin": "0 0 24px 0"}),
+        html.H1("Space Missions Dashboard", style={"color": "#e8f0fe", "fontSize": "24px", "fontWeight": "700", "margin": "0 0 24px 0", "textAlign": "center"}),
 
         # Summary stats
         html.Div(
@@ -175,6 +175,13 @@ app.layout = html.Div(
 _CHART_TEMPLATE = "plotly_dark"
 _CHART_BG = "#131f2e"
 _PAPER_BG = "#1e2a3a"
+
+
+def _fix_hover(fig):
+    fig.for_each_trace(lambda t: t.update(
+        hovertemplate=t.hovertemplate.replace("=", ": ") if t.hovertemplate else t.hovertemplate
+    ))
+    return fig
 
 _DEFAULT_START = date_min_picker
 _DEFAULT_END = date_max_picker
@@ -308,5 +315,10 @@ def update_all(start_date, end_date, company, statuses):
         date_range_str = f"{d_min} → {d_max}"
     else:
         date_range_str = "N/A"
+
+    _fix_hover(fig_year)
+    _fix_hover(fig_company)
+    _fix_hover(fig_status)
+    _fix_hover(fig_success)
 
     return f"{total:,}", f"{success_rate}%", date_range_str, fig_year, fig_company, fig_status, fig_success, table_data
