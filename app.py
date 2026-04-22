@@ -194,7 +194,7 @@ def update_all(start_date, end_date, company, statuses):
         markers=True,
         color_discrete_sequence=["#4a9eff"],
     )
-    fig_year.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20))
+    fig_year.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), title_x=0.5, title_font_weight="bold")
 
     # Chart 2: Top 15 companies by mission count (bar)
     if not filtered.empty:
@@ -212,7 +212,7 @@ def update_all(start_date, end_date, company, statuses):
         color="Missions",
         color_continuous_scale="Blues",
     )
-    fig_company.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), yaxis={"categoryorder": "total ascending"}, coloraxis_showscale=False)
+    fig_company.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), yaxis={"categoryorder": "total ascending", "ticklabelstandoff": 8}, coloraxis_showscale=False, title_x=0.5, title_font_weight="bold")
 
     # Chart 3: Mission status breakdown (donut)
     if not filtered.empty:
@@ -232,7 +232,7 @@ def update_all(start_date, end_date, company, statuses):
             "Prelaunch Failure": "#ff7a45",
         },
     )
-    fig_status.update_layout(paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20))
+    fig_status.update_layout(paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), title_x=0.5, title_font_weight="bold")
 
     # Chart 4: Success rate by company — top 10 by mission count (horizontal bar)
     if not filtered.empty:
@@ -254,7 +254,7 @@ def update_all(start_date, end_date, company, statuses):
         color_continuous_scale="RdYlGn",
         range_color=[0, 100],
     )
-    fig_success.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), yaxis={"categoryorder": "total ascending"}, coloraxis_showscale=False)
+    fig_success.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), yaxis={"categoryorder": "total ascending", "ticklabelstandoff": 8}, coloraxis_showscale=False, title_x=0.5, title_font_weight="bold")
 
     # Table data
     table_df = filtered[["Mission", "Company", "Date", "Rocket", "MissionStatus", "Price"]].copy()
