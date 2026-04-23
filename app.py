@@ -238,7 +238,25 @@ app.layout = html.Div(
 
         # Data table
         html.Div([
-            html.H2("Mission Data", style={"fontSize": "16px", "fontWeight": "600", "color": "#8a9bb0", "margin": "0 0 12px 0"}),
+            html.Div(
+                style={"display": "flex", "alignItems": "center", "justifyContent": "space-between", "marginBottom": "12px"},
+                children=[
+                    html.H2("Mission Data", style={"fontSize": "16px", "fontWeight": "600", "color": "#8a9bb0", "margin": "0"}),
+                    html.Div(
+                        style={"display": "flex", "alignItems": "center", "gap": "8px"},
+                        children=[
+                            html.Label("Rows per page:", style={**_label_style, "margin": 0}),
+                            dcc.Dropdown(
+                                id="page-size-select",
+                                options=[{"label": str(n), "value": n} for n in [10, 20, 50, 100]],
+                                value=20,
+                                clearable=False,
+                                style={"width": "80px", "color": "#0f1923"},
+                            ),
+                        ],
+                    ),
+                ],
+            ),
             dash_table.DataTable(
                 id="mission-table",
                 columns=[
@@ -297,6 +315,14 @@ _DEFAULT_END = date_max_picker
 )
 def reset_filters(_):
     return _DEFAULT_START, _DEFAULT_END, None, None, None, None, "all", [_price_min, _price_max]
+
+
+@callback(
+    Output("mission-table", "page_size"),
+    Input("page-size-select", "value"),
+)
+def update_page_size(value):
+    return value if value else 20
 
 
 @callback(
