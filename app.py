@@ -53,15 +53,7 @@ if not _df.empty and _df["Price"].notna().any():
     _price_max = float(_df["Price"].max())
 else:
     _price_min, _price_max = 0.0, 1000.0
-_price_marks = {
-    int(v): f"{int(v):,}" for v in [
-        _price_min,
-        _price_min + (_price_max - _price_min) * 0.25,
-        _price_min + (_price_max - _price_min) * 0.5,
-        _price_min + (_price_max - _price_min) * 0.75,
-        _price_max,
-    ]
-}
+_price_marks = {v: str(v) for v in range(0, 6000, 1000)}
 
 _card_style = {
     "background": "#1e2a3a",

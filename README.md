@@ -29,8 +29,20 @@ Then open [http://127.0.0.1:8050](http://127.0.0.1:8050) in your browser.
 
 ### Dashboard
 - **Summary stats**: total missions, overall success rate, and date range, all updated dynamically as filters change
-- **Interactive filters**: date range picker, multi-select company dropdown, and mission status filter with a reset button to restore defaults
 - **Data table**: sortable and filterable table with pagination (20 rows/page)
+
+### Filters
+| Filter | Type | Description |
+|---|---|---|
+| Date Range | Date picker | Start and end date (inclusive) |
+| Decade | Button group | Quickly restrict to a single decade (1950s–2020s) |
+| Company | Multi-select dropdown | One or more organizations |
+| Mission Status | Multi-select dropdown | Success, Failure, Partial Failure, Prelaunch Failure |
+| Rocket Status | Multi-select dropdown | Active or Retired rockets |
+| Country | Multi-select dropdown | Launch country, parsed from the Location field |
+| Price Range | Slider | 0–5000 M$; missions with no price data always pass through |
+
+A **Reset Filters** button restores all filters to their defaults.
 
 ### Visualizations
 | Chart | Type | Rationale |
@@ -68,6 +80,6 @@ SpaceMissions/
 ├── app.py               # Dash layout and callbacks
 ├── main.py              # entry point
 ├── assets/
-│   └── custom.css       # date picker styling overrides
+│   └── custom.css       # date picker and slider styling overrides
 └── requirements.txt
 ```
