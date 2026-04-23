@@ -100,125 +100,135 @@ app.layout = html.Div(
             ],
         ),
 
-        # Filters — row 1: date + decade + reset
+        # All filter rows in an inline-flex column so all rows share the same width
         html.Div(
-            style={"display": "flex", "gap": "16px", "marginBottom": "12px", "flexWrap": "wrap", "alignItems": "flex-end"},
+            style={"display": "inline-flex", "flexDirection": "column", "gap": "12px", "marginBottom": "24px"},
             children=[
-                html.Div([
-                    html.Label("Date Range", style=_label_style),
-                    dcc.DatePickerRange(
-                        id="date-filter",
-                        min_date_allowed=date_min_picker,
-                        max_date_allowed=date_max_picker,
-                        start_date=date_min_picker,
-                        end_date=date_max_picker,
-                        display_format="YYYY-MM-DD",
-                        style={"background": "#1e2a3a"},
-                    ),
-                ]),
-                html.Div([
-                    html.Label("Decade", style=_label_style),
-                    dcc.RadioItems(
-                        id="decade-filter",
-                        options=_decade_options,
-                        value="all",
-                        inline=True,
-                        inputStyle={"display": "none"},
-                        labelStyle={
-                            "padding": "5px 10px",
-                            "marginRight": "4px",
-                            "background": "#2d3f55",
-                            "borderRadius": "4px",
-                            "cursor": "pointer",
-                            "fontSize": "13px",
-                            "color": "#e8f0fe",
-                        },
-                    ),
-                ]),
-                html.Div([
-                    html.Label(" ", style=_label_style),
-                    html.Button(
-                        "Reset Filters",
-                        id="reset-btn",
-                        n_clicks=0,
-                        style={
-                            "background": "#2d3f55",
-                            "color": "#e8f0fe",
-                            "border": "1px solid #4a9eff",
-                            "borderRadius": "6px",
-                            "padding": "8px 16px",
-                            "cursor": "pointer",
-                            "fontSize": "13px",
-                            "fontWeight": "600",
-                        },
-                    ),
-                ]),
-            ],
-        ),
 
-        # Filters — row 2: company + status + rocket status + country
-        html.Div(
-            style={"display": "flex", "gap": "16px", "marginBottom": "12px", "flexWrap": "wrap", "alignItems": "flex-end"},
-            children=[
-                html.Div([
-                    html.Label("Company", style=_label_style),
-                    dcc.Dropdown(
-                        id="company-filter",
-                        options=_company_options,
-                        placeholder="All companies",
-                        clearable=True,
-                        multi=True,
-                        style={"width": "300px", "background": "#1e2a3a", "color": "#0f1923"},
-                    ),
-                ]),
-                html.Div([
-                    html.Label("Mission Status", style=_label_style),
-                    dcc.Dropdown(
-                        id="status-filter",
-                        options=_status_options,
-                        placeholder="All statuses",
-                        multi=True,
-                        style={"width": "280px", "background": "#1e2a3a", "color": "#0f1923"},
-                    ),
-                ]),
-                html.Div([
-                    html.Label("Rocket Status", style=_label_style),
-                    dcc.Dropdown(
-                        id="rocket-status-filter",
-                        options=_rocket_status_options,
-                        placeholder="All rockets",
-                        clearable=True,
-                        multi=True,
-                        style={"width": "200px", "background": "#1e2a3a", "color": "#0f1923"},
-                    ),
-                ]),
-                html.Div([
-                    html.Label("Country", style=_label_style),
-                    dcc.Dropdown(
-                        id="country-filter",
-                        options=_country_options,
-                        placeholder="All countries",
-                        clearable=True,
-                        multi=True,
-                        style={"width": "220px", "background": "#1e2a3a", "color": "#0f1923"},
-                    ),
-                ]),
-            ],
-        ),
+                # Row 1: date + decade + reset
+                html.Div(
+                    style={"display": "flex", "gap": "16px", "alignItems": "flex-end"},
+                    children=[
+                        html.Div([
+                            html.Label("Date Range", style=_label_style),
+                            dcc.DatePickerRange(
+                                id="date-filter",
+                                min_date_allowed=date_min_picker,
+                                max_date_allowed=date_max_picker,
+                                start_date=date_min_picker,
+                                end_date=date_max_picker,
+                                display_format="YYYY-MM-DD",
+                                style={"background": "#1e2a3a"},
+                            ),
+                        ]),
+                        html.Div([
+                            html.Label("Decade", style=_label_style),
+                            dcc.RadioItems(
+                                id="decade-filter",
+                                options=_decade_options,
+                                value="all",
+                                inline=True,
+                                inputStyle={"display": "none"},
+                                labelStyle={
+                                    "padding": "5px 10px",
+                                    "marginRight": "4px",
+                                    "background": "#2d3f55",
+                                    "borderRadius": "4px",
+                                    "cursor": "pointer",
+                                    "fontSize": "13px",
+                                    "color": "#e8f0fe",
+                                },
+                            ),
+                        ]),
+                        html.Div([
+                            html.Label(" ", style=_label_style),
+                            html.Button(
+                                "Reset Filters",
+                                id="reset-btn",
+                                n_clicks=0,
+                                style={
+                                    "background": "#2d3f55",
+                                    "color": "#e8f0fe",
+                                    "border": "1px solid #4a9eff",
+                                    "borderRadius": "6px",
+                                    "padding": "8px 16px",
+                                    "cursor": "pointer",
+                                    "fontSize": "13px",
+                                    "fontWeight": "600",
+                                },
+                            ),
+                        ]),
+                    ],
+                ),
 
-        # Filters — row 3: price range
-        html.Div(
-            style={"marginBottom": "24px"},
-            children=[
-                html.Label("Price Range (M$)", style=_label_style),
-                dcc.RangeSlider(
-                    id="price-filter",
-                    min=_price_min,
-                    max=_price_max,
-                    value=[_price_min, _price_max],
-                    marks=_price_marks,
-                    tooltip={"placement": "bottom", "always_visible": False},
-                    updatemode="mouseup",
+                # Row 2: company + status + rocket status + country
+                html.Div(
+                    style={"display": "flex", "gap": "16px", "alignItems": "flex-end"},
+                    children=[
+                        html.Div([
+                            html.Label("Company", style=_label_style),
+                            dcc.Dropdown(
+                                id="company-filter",
+                                options=_company_options,
+                                placeholder="All companies",
+                                clearable=True,
+                                multi=True,
+                                style={"width": "300px", "background": "#1e2a3a", "color": "#0f1923"},
+                            ),
+                        ]),
+                        html.Div([
+                            html.Label("Mission Status", style=_label_style),
+                            dcc.Dropdown(
+                                id="status-filter",
+                                options=_status_options,
+                                placeholder="All statuses",
+                                multi=True,
+                                style={"width": "280px", "background": "#1e2a3a", "color": "#0f1923"},
+                            ),
+                        ]),
+                        html.Div([
+                            html.Label("Rocket Status", style=_label_style),
+                            dcc.Dropdown(
+                                id="rocket-status-filter",
+                                options=_rocket_status_options,
+                                placeholder="All rockets",
+                                clearable=True,
+                                multi=True,
+                                style={"width": "200px", "background": "#1e2a3a", "color": "#0f1923"},
+                            ),
+                        ]),
+                        html.Div([
+                            html.Label("Country", style=_label_style),
+                            dcc.Dropdown(
+                                id="country-filter",
+                                options=_country_options,
+                                placeholder="All countries",
+                                clearable=True,
+                                multi=True,
+                                style={"width": "220px", "background": "#1e2a3a", "color": "#0f1923"},
+                            ),
+                        ]),
+                    ],
+                ),
+
+                # Row 3: price range — slider fills width determined by rows above
+                html.Div(
+                    style={"display": "flex", "gap": "16px", "alignItems": "center"},
+                    children=[
+                        html.Label("Price Range (M$)", style={**_label_style, "margin": 0, "whiteSpace": "nowrap"}),
+                        html.Div(
+                            dcc.RangeSlider(
+                                id="price-filter",
+                                min=_price_min,
+                                max=_price_max,
+                                value=[_price_min, _price_max],
+                                marks=_price_marks,
+                                tooltip={"placement": "bottom", "always_visible": False},
+                                updatemode="mouseup",
+                            ),
+                            style={"flex": "1", "minWidth": "0"},
+                        ),
+                    ],
                 ),
             ],
         ),

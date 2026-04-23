@@ -62,6 +62,21 @@ input.dash-input-element {
     background-color: #ffffff !important;
 }
 
+/* Price range slider number inputs */
+input.dash-range-slider-input {
+    color: #1a1a2e !important;
+}
+
+/* Price slider mark labels */
+div.dash-slider-mark {
+    color: #8a9bb0 !important;
+}
+
+/* Price slider handle tooltips */
+div.dash-slider-tooltip {
+    color: #1a1a2e !important;
+}
+
 /* Keep selected/highlighted days readable */
 .CalendarDay__selected,
 .CalendarDay__selected:hover {
