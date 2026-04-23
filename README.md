@@ -34,7 +34,7 @@ Then open [http://127.0.0.1:8050](http://127.0.0.1:8050) in your browser.
 ### Filters
 | Filter | Type | Description |
 |---|---|---|
-| Date Range | Date picker | Start and end date (inclusive) |
+| Date Range | Date picker | Start and end date |
 | Decade | Button group | Quickly restrict to a single decade (1950s–2020s) |
 | Company | Multi-select dropdown | One or more organizations |
 | Mission Status | Multi-select dropdown | Success, Failure, Partial Failure, Prelaunch Failure |
@@ -75,11 +75,11 @@ from functions import getMissionCountByCompany, getSuccessRate  # etc.
 
 ```
 SpaceMissions/
-├── space_missions.csv   # data file (not committed)
-├── functions.py         # data functions (no Dash imports — safe to import standalone)
-├── app.py               # Dash layout and callbacks
-├── main.py              # entry point
+├── space_missions.csv   
+├── functions.py         
+├── app.py               
+├── main.py              
 ├── assets/
-│   └── custom.css       # date picker and slider styling overrides
+│   └── custom.css       
 └── requirements.txt
 ```
