@@ -30,12 +30,16 @@ except pd.errors.EmptyDataError:
 
 
 def getMissionCountByCompany(companyName: str) -> int:
+    if not isinstance(companyName, str) or not companyName.strip():
+        return 0
     if df.empty:
         return 0
     return int((df["Company"] == companyName).sum())
 
 
 def getSuccessRate(companyName: str) -> float:
+    if not isinstance(companyName, str) or not companyName.strip():
+        return 0.0
     if df.empty:
         return 0.0
     company_df = df[df["Company"] == companyName]
@@ -47,6 +51,8 @@ def getSuccessRate(companyName: str) -> float:
 
 
 def getMissionsByDateRange(startDate: str, endDate: str) -> list:
+    if not isinstance(startDate, str) or not isinstance(endDate, str):
+        return []
     if df.empty:
         return []
     try:
@@ -54,13 +60,18 @@ def getMissionsByDateRange(startDate: str, endDate: str) -> list:
         end = pd.to_datetime(endDate, format="%Y-%m-%d")
     except (ValueError, TypeError):
         return []
+    if start > end:
+        return []
     mask = (df["Date"] >= start) & (df["Date"] <= end)
-    result = df.loc[mask].sort_values("Date")["Mission"].tolist()
-    return result
+    return df.loc[mask].sort_values("Date")["Mission"].tolist()
 
 
 def getTopCompaniesByMissionCount(n: int) -> list:
-    if df.empty or n <= 0:
+    if not isinstance(n, int) or isinstance(n, bool):
+        return []
+    if n <= 0:
+        return []
+    if df.empty:
         return []
     counts = df.groupby("Company", dropna=True).size().reset_index(name="count")
     counts = counts.sort_values(["count", "Company"], ascending=[False, True])
@@ -80,6 +91,8 @@ def getMissionStatusCount() -> dict:
 
 
 def getMissionsByYear(year: int) -> int:
+    if not isinstance(year, int) or isinstance(year, bool):
+        return 0
     if df.empty:
         return 0
     return int((df["Date"].dt.year == year).sum())
@@ -89,12 +102,18 @@ def getMostUsedRocket() -> str:
     if df.empty:
         return ""
     counts = df.groupby("Rocket", dropna=True).size()
+    if counts.empty:
+        return ""
     max_count = counts.max()
     tied = sorted(counts[counts == max_count].index.tolist())
     return tied[0]
 
 
 def getAverageMissionsPerYear(startYear: int, endYear: int) -> float:
+    if not isinstance(startYear, int) or isinstance(startYear, bool):
+        return 0.0
+    if not isinstance(endYear, int) or isinstance(endYear, bool):
+        return 0.0
     if startYear > endYear:
         return 0.0
     if df.empty:
