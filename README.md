@@ -45,14 +45,14 @@ Then open [http://127.0.0.1:8050](http://127.0.0.1:8050) in your browser.
 A **Reset Filters** button restores all filters to their defaults.
 
 ### Visualizations
-| Chart | Type | Rationale |
-|---|---|---|
+| Chart | Type | Rationale                                                                                                                                |
+|---|---|------------------------------------------------------------------------------------------------------------------------------------------|
 | Missions per Year & Success Rate | Dual-axis line | Left axis shows launch volume; right axis overlays annual success rate (0–100%), revealing whether reliability improved as activity grew |
-| Top Companies by Mission Count | Horizontal bar | Ordered bars make ranking comparisons immediate; horizontal orientation fits long company names |
-| Launches by Location (Top 15) | Horizontal bar | Shows which specific launch sites account for the most activity — more granular than country-level grouping |
-| Success Rate by Company | Horizontal bar | Compares quality vs. quantity across the top 10 organizations by volume (min. 5 missions) |
-| Launch Activity by Month & Year | Heatmap | Reveals seasonal launch patterns and busy periods invisible in the annual line chart |
-| Mission Cost Distribution | Histogram | Shows how mission costs are distributed across price bands, making use of the Price data beyond the filter slider |
+| Top Companies by Mission Count | Horizontal bar | Ordered bars make ranking comparisons immediate; horizontal orientation fits long company names                                          |
+| Launches by Location (Top 15) | Horizontal bar | Shows which specific launch sites account for the most activity allows more granularity than country-level grouping                      |
+| Success Rate by Company | Horizontal bar | Compares quality vs. quantity across the top 10 organizations by volume (min. 5 missions)                                                |
+| Launch Activity by Month & Year | Heatmap | Reveals seasonal launch patterns and busy periods invisible in the annual line chart                                                     |
+| Mission Cost Distribution | Histogram | Shows how mission costs are distributed across price bands, making use of the Price data beyond the filter slider                        |
 
 ## Data Functions
 
