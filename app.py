@@ -425,7 +425,7 @@ def update_all(start_date, end_date, company, statuses, rocket_statuses, locatio
         margin=dict(t=20, b=20, l=20, r=20),
         title_x=0.5,
         title_font_weight="bold",
-        legend=dict(orientation="v", yanchor="top", y=1.2, xanchor="right", x=1, font=dict(size=10)),
+        legend=dict(orientation="v", yanchor="top", y=1.17, xanchor="right", x=1, font=dict(size=12)),
     )
     fig_year.update_yaxes(title_text="Missions", secondary_y=False, title_font_color="#4a9eff")
     fig_year.update_yaxes(title_text="Success Rate (%)", secondary_y=True, range=[0, 100], title_font_color="#52c41a")
