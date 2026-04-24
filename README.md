@@ -34,23 +34,25 @@ Then open [http://127.0.0.1:8050](http://127.0.0.1:8050) in your browser.
 ### Filters
 | Filter | Type | Description |
 |---|---|---|
-| Date Range | Date picker | Start and end date |
+| Date Range | Date picker | Start and end date; updates automatically when a decade is selected |
 | Decade | Button group | Quickly restrict to a single decade (1950s–2020s) |
 | Company | Multi-select dropdown | One or more organizations |
 | Mission Status | Multi-select dropdown | Success, Failure, Partial Failure, Prelaunch Failure |
 | Rocket Status | Multi-select dropdown | Active or Retired rockets |
-| Country | Multi-select dropdown | Launch country, parsed from the Location field |
-| Price Range | Slider | 0–5000 M$; missions with no price data always pass through |
+| Location | Multi-select dropdown | Full launch site location (e.g. "LC-39A, Kennedy Space Center, Florida, USA") |
+| Price Range | Slider | Spans the actual price range in the data; missions with no price data always pass through |
 
 A **Reset Filters** button restores all filters to their defaults.
 
 ### Visualizations
 | Chart | Type | Rationale |
 |---|---|---|
-| Missions per Year | Line | Best for showing temporal trends — reveals the Space Race peak and post-Cold War decline |
+| Missions per Year & Success Rate | Dual-axis line | Left axis shows launch volume; right axis overlays annual success rate (0–100%), revealing whether reliability improved as activity grew |
 | Top Companies by Mission Count | Horizontal bar | Ordered bars make ranking comparisons immediate; horizontal orientation fits long company names |
-| Mission Status Breakdown | Donut | Part-of-whole relationship — shows overall success rate at a glance |
+| Launches by Location (Top 15) | Horizontal bar | Shows which specific launch sites account for the most activity — more granular than country-level grouping |
 | Success Rate by Company | Horizontal bar | Compares quality vs. quantity across the top 10 organizations by volume (min. 5 missions) |
+| Launch Activity by Month & Year | Heatmap | Reveals seasonal launch patterns and busy periods invisible in the annual line chart |
+| Mission Cost Distribution | Histogram | Shows how mission costs are distributed across price bands, making use of the Price data beyond the filter slider |
 
 ## Data Functions
 
@@ -64,7 +66,7 @@ from functions import getMissionCountByCompany, getSuccessRate  # etc.
 |---|---|---|
 | `getMissionCountByCompany(companyName: str)` | `int` | Returns `0` if company not found |
 | `getSuccessRate(companyName: str)` | `float` | Rounded to 2 decimal places; returns `0.0` if company has no missions |
-| `getMissionsByDateRange(startDate: str, endDate: str)` | `list[str]` | Mission names sorted chronologically; dates in `YYYY-MM-DD` format |
+| `getMissionsByDateRange(startDate: str, endDate: str)` | `list[str]` | Mission names sorted chronologically by date then time; dates in `YYYY-MM-DD` format |
 | `getTopCompaniesByMissionCount(n: int)` | `list[tuple]` | `[(name, count), ...]` sorted by count desc, then alphabetically |
 | `getMissionStatusCount()` | `dict` | All 4 keys always present: `Success`, `Failure`, `Partial Failure`, `Prelaunch Failure` |
 | `getMissionsByYear(year: int)` | `int` | Returns `0` if no missions in that year |
