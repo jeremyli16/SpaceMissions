@@ -63,7 +63,7 @@ def getMissionsByDateRange(startDate: str, endDate: str) -> list:
     if start > end:
         return []
     mask = (df["Date"] >= start) & (df["Date"] <= end)
-    return df.loc[mask].sort_values("Date")["Mission"].tolist()
+    return df.loc[mask].sort_values(["Date", "Time"], na_position="last")["Mission"].tolist()
 
 
 def getTopCompaniesByMissionCount(n: int) -> list:

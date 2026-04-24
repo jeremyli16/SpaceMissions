@@ -1,5 +1,9 @@
+from datetime import date
+
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from dash import Dash, dcc, html, dash_table, Input, Output, callback
 
 import functions as fn
@@ -38,10 +42,8 @@ _rocket_status_options = (
     [{"label": s, "value": s} for s in sorted(_df["RocketStatus"].dropna().unique())]
     if not _df.empty else []
 )
-_country_options = (
-    [{"label": c, "value": c} for c in sorted(
-        _df["Location"].str.split(",").str[-1].str.strip().dropna().unique()
-    )]
+_location_options = (
+    [{"label": loc, "value": loc} for loc in sorted(_df["Location"].dropna().unique())]
     if not _df.empty else []
 )
 _decades = list(range(1950, 2030, 10))
@@ -53,7 +55,9 @@ if not _df.empty and _df["Price"].notna().any():
     _price_max = float(_df["Price"].max())
 else:
     _price_min, _price_max = 0.0, 1000.0
-_price_marks = {v: str(v) for v in range(0, 6000, 1000)}
+_price_range = _price_max - _price_min
+_mark_unit = 1000 if _price_range >= 1000 else 100 if _price_range >= 100 else 10 if _price_range >= 10 else 1
+_price_marks = {v: str(v) for v in range(0, int(_price_max) + _mark_unit, _mark_unit) if v <= _price_max}
 
 _card_style = {
     "background": "#1e2a3a",
@@ -153,7 +157,7 @@ app.layout = html.Div(
                     ],
                 ),
 
-                # Row 2: company + status + rocket status + country
+                # Row 2: company + status + rocket status + location
                 html.Div(
                     style={"display": "flex", "gap": "16px", "alignItems": "flex-end"},
                     children=[
@@ -190,11 +194,11 @@ app.layout = html.Div(
                             ),
                         ]),
                         html.Div([
-                            html.Label("Country", style=_label_style),
+                            html.Label("Location", style=_label_style),
                             dcc.Dropdown(
-                                id="country-filter",
-                                options=_country_options,
-                                placeholder="All countries",
+                                id="location-filter",
+                                options=_location_options,
+                                placeholder="All locations",
                                 clearable=True,
                                 multi=True,
                                 style={"width": "220px", "background": "#1e2a3a", "color": "#0f1923"},
@@ -225,14 +229,16 @@ app.layout = html.Div(
             ],
         ),
 
-        # Charts 2x2 grid
+        # Charts 3x2 grid
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "1fr 1fr", "gap": "16px", "marginBottom": "24px"},
             children=[
                 dcc.Graph(id="year-chart"),
                 dcc.Graph(id="company-chart"),
-                dcc.Graph(id="status-chart"),
+                dcc.Graph(id="country-chart"),
                 dcc.Graph(id="success-rate-chart"),
+                dcc.Graph(id="heatmap-chart"),
+                dcc.Graph(id="cost-chart"),
             ],
         ),
 
@@ -307,7 +313,7 @@ _DEFAULT_END = date_max_picker
     Output("company-filter", "value"),
     Output("status-filter", "value"),
     Output("rocket-status-filter", "value"),
-    Output("country-filter", "value"),
+    Output("location-filter", "value"),
     Output("decade-filter", "value"),
     Output("price-filter", "value"),
     Input("reset-btn", "n_clicks"),
@@ -315,6 +321,25 @@ _DEFAULT_END = date_max_picker
 )
 def reset_filters(_):
     return _DEFAULT_START, _DEFAULT_END, None, None, None, None, "all", [_price_min, _price_max]
+
+
+@callback(
+    Output("date-filter", "start_date", allow_duplicate=True),
+    Output("date-filter", "end_date", allow_duplicate=True),
+    Input("decade-filter", "value"),
+    prevent_initial_call=True,
+)
+def sync_date_to_decade(decade):
+    if not decade or decade == "all":
+        return _DEFAULT_START, _DEFAULT_END
+    decade_int = int(decade)
+    start = date(decade_int, 1, 1)
+    end = date(min(decade_int + 9, date_max_picker.year), 12, 31)
+    if date_min_picker and start < date_min_picker:
+        start = date_min_picker
+    if date_max_picker and end > date_max_picker:
+        end = date_max_picker
+    return start, end
 
 
 @callback(
@@ -331,19 +356,21 @@ def update_page_size(value):
     Output("stat-date-range", "children"),
     Output("year-chart", "figure"),
     Output("company-chart", "figure"),
-    Output("status-chart", "figure"),
+    Output("country-chart", "figure"),
     Output("success-rate-chart", "figure"),
+    Output("heatmap-chart", "figure"),
+    Output("cost-chart", "figure"),
     Output("mission-table", "data"),
     Input("date-filter", "start_date"),
     Input("date-filter", "end_date"),
     Input("company-filter", "value"),
     Input("status-filter", "value"),
     Input("rocket-status-filter", "value"),
-    Input("country-filter", "value"),
+    Input("location-filter", "value"),
     Input("decade-filter", "value"),
     Input("price-filter", "value"),
 )
-def update_all(start_date, end_date, company, statuses, rocket_statuses, countries, decade, price_range):
+def update_all(start_date, end_date, company, statuses, rocket_statuses, locations, decade, price_range):
     filtered = _df.copy()
 
     if decade and decade != "all":
@@ -362,28 +389,46 @@ def update_all(start_date, end_date, company, statuses, rocket_statuses, countri
         filtered = filtered[filtered["MissionStatus"].isin(statuses)]
     if rocket_statuses:
         filtered = filtered[filtered["RocketStatus"].isin(rocket_statuses)]
-    if countries:
-        country_col = filtered["Location"].str.split(",").str[-1].str.strip()
-        filtered = filtered[country_col.isin(countries)]
+    if locations:
+        filtered = filtered[filtered["Location"].isin(locations)]
     if price_range:
         lo, hi = price_range
         price_mask = filtered["Price"].isna() | ((filtered["Price"] >= lo) & (filtered["Price"] <= hi))
         filtered = filtered[price_mask]
 
-    # Chart 1: Missions per year (line)
+    # Chart 1: Missions per year + success rate (dual-axis line)
     if not filtered.empty:
-        by_year = filtered.groupby(filtered["Date"].dt.year).size().reset_index(name="Missions")
-        by_year.columns = ["Year", "Missions"]
+        by_year = filtered.groupby(filtered["Date"].dt.year).agg(
+            Missions=("Mission", "count"),
+            Successes=("MissionStatus", lambda x: (x == "Success").sum()),
+        ).reset_index()
+        by_year.columns = ["Year", "Missions", "Successes"]
+        by_year["SuccessRate"] = (by_year["Successes"] / by_year["Missions"] * 100).round(2)
     else:
-        by_year = pd.DataFrame({"Year": [], "Missions": []})
-    fig_year = px.line(
-        by_year, x="Year", y="Missions",
-        title="Missions per Year",
-        template=_CHART_TEMPLATE,
-        markers=True,
-        color_discrete_sequence=["#4a9eff"],
+        by_year = pd.DataFrame({"Year": [], "Missions": [], "SuccessRate": []})
+    fig_year = make_subplots(specs=[[{"secondary_y": True}]])
+    fig_year.add_trace(
+        go.Scatter(x=by_year["Year"], y=by_year["Missions"], name="Missions",
+                   line=dict(color="#4a9eff"), mode="lines+markers"),
+        secondary_y=False,
     )
-    fig_year.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), title_x=0.5, title_font_weight="bold")
+    fig_year.add_trace(
+        go.Scatter(x=by_year["Year"], y=by_year["SuccessRate"], name="Success Rate (%)",
+                   line=dict(color="#52c41a", dash="dash"), mode="lines+markers"),
+        secondary_y=True,
+    )
+    fig_year.update_layout(
+        title_text="Missions per Year & Success Rate",
+        template=_CHART_TEMPLATE,
+        plot_bgcolor=_CHART_BG,
+        paper_bgcolor=_PAPER_BG,
+        margin=dict(t=40, b=20, l=20, r=60),
+        title_x=0.5,
+        title_font_weight="bold",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    fig_year.update_yaxes(title_text="Missions", secondary_y=False, title_font_color="#4a9eff")
+    fig_year.update_yaxes(title_text="Success Rate (%)", secondary_y=True, range=[0, 100], title_font_color="#52c41a")
 
     # Chart 2: Top 15 companies by mission count (bar)
     if not filtered.empty:
@@ -403,25 +448,22 @@ def update_all(start_date, end_date, company, statuses, rocket_statuses, countri
     )
     fig_company.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), yaxis={"categoryorder": "total ascending", "ticklabelstandoff": 8}, coloraxis_showscale=False, title_x=0.5, title_font_weight="bold")
 
-    # Chart 3: Mission status breakdown (donut)
+    # Chart 3: Launches by location (horizontal bar)
     if not filtered.empty:
-        status_counts = filtered["MissionStatus"].value_counts().reset_index()
-        status_counts.columns = ["Status", "Count"]
+        location_counts = filtered["Location"].value_counts().reset_index()
+        location_counts.columns = ["Location", "Missions"]
+        location_counts = location_counts.head(15)
     else:
-        status_counts = pd.DataFrame({"Status": [], "Count": []})
-    fig_status = px.pie(
-        status_counts, names="Status", values="Count",
-        title="Mission Status Breakdown",
+        location_counts = pd.DataFrame({"Location": [], "Missions": []})
+    fig_country = px.bar(
+        location_counts, x="Missions", y="Location",
+        orientation="h",
+        title="Launches by Location (Top 15)",
         template=_CHART_TEMPLATE,
-        hole=0.45,
-        color_discrete_map={
-            "Success": "#52c41a",
-            "Failure": "#ff4d4f",
-            "Partial Failure": "#faad14",
-            "Prelaunch Failure": "#ff7a45",
-        },
+        color="Missions",
+        color_continuous_scale="Blues",
     )
-    fig_status.update_layout(paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), title_x=0.5, title_font_weight="bold")
+    fig_country.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), yaxis={"categoryorder": "total ascending", "ticklabelstandoff": 8}, coloraxis_showscale=False, title_x=0.5, title_font_weight="bold")
 
     # Chart 4: Success rate by company — top 10 by mission count (horizontal bar)
     if not filtered.empty:
@@ -445,10 +487,51 @@ def update_all(start_date, end_date, company, statuses, rocket_statuses, countri
     )
     fig_success.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), yaxis={"categoryorder": "total ascending", "ticklabelstandoff": 8}, coloraxis_showscale=False, title_x=0.5, title_font_weight="bold")
 
+    # Chart 5: Launch activity heatmap (year × month)
+    _month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    if not filtered.empty:
+        heat_df = filtered.dropna(subset=["Date"]).copy()
+        heat_df["Year"] = heat_df["Date"].dt.year
+        heat_df["Month"] = heat_df["Date"].dt.month
+        heat_pivot = heat_df.groupby(["Year", "Month"]).size().unstack(fill_value=0)
+        for m in range(1, 13):
+            if m not in heat_pivot.columns:
+                heat_pivot[m] = 0
+        heat_pivot = heat_pivot[sorted(heat_pivot.columns)]
+        z_vals = heat_pivot.values.tolist()
+        y_vals = heat_pivot.index.tolist()
+    else:
+        z_vals, y_vals = [], []
+    fig_heatmap = go.Figure(go.Heatmap(
+        z=z_vals, x=_month_names, y=y_vals,
+        colorscale="Blues",
+        hovertemplate="Year: %{y}<br>Month: %{x}<br>Launches: %{z}<extra></extra>",
+    ))
+    fig_heatmap.update_layout(title="Launch Activity by Month & Year", template=_CHART_TEMPLATE, paper_bgcolor=_PAPER_BG, plot_bgcolor=_CHART_BG, margin=dict(t=40, b=20, l=20, r=20), title_x=0.5, title_font_weight="bold")
+
+    # Chart 6: Mission cost distribution (histogram)
+    price_data = filtered.dropna(subset=["Price"])
+    if not price_data.empty:
+        fig_cost = px.histogram(
+            price_data, x="Price",
+            title="Mission Cost Distribution (M$)",
+            template=_CHART_TEMPLATE,
+            color_discrete_sequence=["#4a9eff"],
+            nbins=30,
+        )
+    else:
+        fig_cost = px.histogram(
+            pd.DataFrame({"Price": pd.Series([], dtype=float)}), x="Price",
+            title="Mission Cost Distribution (M$)",
+            template=_CHART_TEMPLATE,
+            color_discrete_sequence=["#4a9eff"],
+        )
+    fig_cost.update_layout(plot_bgcolor=_CHART_BG, paper_bgcolor=_PAPER_BG, margin=dict(t=40, b=20, l=20, r=20), title_x=0.5, title_font_weight="bold", xaxis_title="Cost (M$)", yaxis_title="Missions")
+
     # Table data
     table_df = filtered[["Mission", "Company", "Date", "Rocket", "MissionStatus", "Price"]].copy()
     table_df["Date"] = table_df["Date"].dt.strftime("%Y-%m-%d")
-    table_df["Price"] = table_df["Price"].astype(str).replace("<NA>", "")
+    table_df["Price"] = table_df["Price"].astype(str).replace({"<NA>": "", "nan": ""})
     table_data = table_df.to_dict("records")
 
     # Summary stats
@@ -463,7 +546,8 @@ def update_all(start_date, end_date, company, statuses, rocket_statuses, countri
 
     _fix_hover(fig_year)
     _fix_hover(fig_company)
-    _fix_hover(fig_status)
+    _fix_hover(fig_country)
     _fix_hover(fig_success)
+    _fix_hover(fig_cost)
 
-    return f"{total:,}", f"{success_rate}%", date_range_str, fig_year, fig_company, fig_status, fig_success, table_data
+    return f"{total:,}", f"{success_rate}%", date_range_str, fig_year, fig_company, fig_country, fig_success, fig_heatmap, fig_cost, table_data
